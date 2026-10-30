@@ -18,6 +18,24 @@ jobs:
   api:
     name: API tests and build
     runs-on: ubuntu-latest
+    env:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5433/kassa_development
+      SPRING_DATASOURCE_USERNAME: kassa
+      SPRING_DATASOURCE_PASSWORD: ci-only-password
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: kassa_development
+          POSTGRES_USER: kassa
+          POSTGRES_PASSWORD: ci-only-password
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd "pg_isready -U kassa -d kassa_development"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     defaults:
       run:
         working-directory: api
@@ -31,11 +49,8 @@ jobs:
           distribution: temurin
           java-version: "21"
 
-      - name: Build Project
-        run: mvn clean install --batch-mode
-
-      - name: Run Tests
-        run: mvn test
+      - name: Test and build API
+        run: ./mvnw --batch-mode --no-transfer-progress clean verify
 
   frontend:
     name: Frontend lint and build
