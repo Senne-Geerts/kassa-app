@@ -1,19 +1,22 @@
 'use client';
 
 import { categoryApi, eventApi } from '@/lib/api';
+import type { EventResponse } from '@/lib/api';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { Label } from '@/components/ui/Label';
 import { ArrowLeft } from 'lucide-react';
 import { useEffect, useState, use } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function NewCategoryPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
+  const router = useRouter();
   const [name, setName] = useState('');
   const [sortOrder, setSortOrder] = useState<string>('1');
   const [loading, setLoading] = useState(true);
-  const [event, setEvent] = useState<any>(null);
+  const [event, setEvent] = useState<EventResponse | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -36,14 +39,11 @@ export default function NewCategoryPage({ params }: { params: Promise<{ slug: st
 
     setIsSubmitting(true);
     try {
-      await categoryApi.create(event.id, {
-        name,
-        sortOrder: parseInt(sortOrder) || 1,
-      });
-      window.location.href = `/events/${slug}/categories`;
-    } catch (error: any) {
+      await categoryApi.create(event.id, { name });
+      router.push(`/events/${slug}/categories`);
+    } catch (error) {
       console.error('Mislukt om categorie te maken:', error);
-      const message = error?.message || 'Mislukt om categorie te maken';
+      const message = error instanceof Error ? error.message : 'Mislukt om categorie te maken';
       alert(message);
     } finally {
       setIsSubmitting(false);
@@ -61,7 +61,7 @@ export default function NewCategoryPage({ params }: { params: Promise<{ slug: st
   return (
     <div className="container mx-auto max-w-2xl p-6">
       <div className="mb-6">
-        <Button variant="outline" onClick={() => (window.location.href = `/events/${slug}/categories`)}>
+        <Button variant="outline" onClick={() => router.push(`/events/${slug}/categories`)}>
           <ArrowLeft className="mr-2 h-4 w-4" />
           Terug naar Categorieen
         </Button>
@@ -104,7 +104,7 @@ export default function NewCategoryPage({ params }: { params: Promise<{ slug: st
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => (window.location.href = `/events/${slug}/categories`)}
+                onClick={() => router.push(`/events/${slug}/categories`)}
               >
                 Annuleren
               </Button>

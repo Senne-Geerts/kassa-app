@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { FormField } from '@/components/ui/FormField';
 import { Input } from '@/components/ui/Input';
-import { ComponentPropsWithoutRef, ReactNode } from 'react';
+import { useRouter } from 'next/navigation';
 
 export interface EventFormProps {
   defaultValue?: EventRequest;
@@ -22,6 +22,7 @@ export const EventForm = ({
   submitLoading,
   cancelLink,
 }: EventFormProps) => {
+  const router = useRouter();
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const formData = new FormData(e.target as HTMLFormElement);
@@ -89,7 +90,7 @@ export const EventForm = ({
           {submitLoading ? 'Opslaan...' : submitLabel}
         </Button>
         {cancelLink && (
-          <Button type="button" variant="outline" onClick={() => (window.location.href = cancelLink)}>
+          <Button type="button" variant="outline" onClick={() => router.push(cancelLink)}>
             Annuleren
           </Button>
         )}

@@ -1,6 +1,6 @@
 'use client';
 
-import { ComponentPropsWithoutRef, ReactNode } from 'react';
+import { ReactNode } from 'react';
 
 export const Section = ({ title, description, children, action }: { title: string; description?: string; children: ReactNode; action?: ReactNode }) => {
   return (

@@ -1,21 +1,24 @@
 'use client';
 
-import { categoryApi, eventApi, productApi } from '@/lib/api';
+import { eventApi, productApi } from '@/lib/api';
+import type { EventResponse, ProductResponse } from '@/lib/api';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { Label } from '@/components/ui/Label';
 import { ArrowLeft } from 'lucide-react';
 import { useEffect, useState, use } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function EditProductPage({ params }: { params: Promise<{ slug: string; categoryId: string; productId: string }> }) {
   const { slug, categoryId, productId } = use(params);
+  const router = useRouter();
   const [name, setName] = useState('');
   const [price, setPrice] = useState('');
   const [sortOrder, setSortOrder] = useState<string>('1');
   const [loading, setLoading] = useState(true);
-  const [event, setEvent] = useState<any>(null);
-  const [product, setProduct] = useState<any>(null);
+  const [event, setEvent] = useState<EventResponse | null>(null);
+  const [product, setProduct] = useState<ProductResponse | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -25,12 +28,12 @@ export default function EditProductPage({ params }: { params: Promise<{ slug: st
         setEvent(eventData);
 
         const prodData = await productApi.getAll(eventData.id, categoryId);
-        const foundProduct = prodData.find((p: any) => p.id === productId);
+        const foundProduct = prodData.find((p) => p.id === productId);
         if (foundProduct) {
           setProduct(foundProduct);
           setName(foundProduct.name);
           setPrice(foundProduct.price.toString());
-          setSortOrder(foundProduct.sortOrder.toString());
+          setSortOrder('1');
         }
       } catch (error) {
         console.error('Mislukt om product op te halen:', error);
@@ -50,9 +53,8 @@ export default function EditProductPage({ params }: { params: Promise<{ slug: st
       await productApi.update(event.id, categoryId, productId, {
         name,
         price: parseFloat(price),
-        sortOrder: parseInt(sortOrder) || 1,
       });
-      window.location.href = `/events/${slug}/categories/${categoryId}/products`;
+      router.push(`/events/${slug}/categories/${categoryId}/products`);
     } catch (error) {
       console.error('Mislukt om product bij te werken:', error);
       alert('Mislukt om product bij te werken');
@@ -72,7 +74,7 @@ export default function EditProductPage({ params }: { params: Promise<{ slug: st
   return (
     <div className="container mx-auto max-w-2xl p-6">
       <div className="mb-6">
-        <Button variant="outline" onClick={() => (window.location.href = `/events/${slug}/categories/${categoryId}/products`)}>
+        <Button variant="outline" onClick={() => router.push(`/events/${slug}/categories/${categoryId}/products`)}>
           <ArrowLeft className="mr-2 h-4 w-4" />
           Terug naar Producten
         </Button>
@@ -128,7 +130,7 @@ export default function EditProductPage({ params }: { params: Promise<{ slug: st
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => (window.location.href = `/events/${slug}/categories/${categoryId}/products`)}
+                onClick={() => router.push(`/events/${slug}/categories/${categoryId}/products`)}
               >
                 Annuleren
               </Button>

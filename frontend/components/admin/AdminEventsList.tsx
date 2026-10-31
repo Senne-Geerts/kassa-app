@@ -1,14 +1,17 @@
 'use client';
 
 import { eventApi } from '@/lib/api';
+import type { EventResponse } from '@/lib/api';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
-import { Trash2, Edit, Copy, ArrowLeft, Plus, Loader2 } from 'lucide-react';
+import { Trash2, Edit, Copy, Plus, Loader2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 export function AdminEventsList() {
-  const [events, setEvents] = useState<any[]>([]);
+  const router = useRouter();
+  const [events, setEvents] = useState<EventResponse[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -40,7 +43,7 @@ export function AdminEventsList() {
           <h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-50">Evenementen</h1>
           <p className="mt-1 text-zinc-500 dark:text-zinc-400">Beheer evenementen en menu</p>
         </div>
-        <Button onClick={() => (window.location.href = '/events/new')}>
+        <Button onClick={() => router.push('/events/new')}>
           <Plus className="mr-2 h-4 w-4" />
           Nieuw evenement
         </Button>
@@ -62,14 +65,14 @@ export function AdminEventsList() {
             </CardHeader>
             <CardContent className="flex flex-col gap-3">
               <div className="flex gap-2">
-                <Button variant="outline" size="sm" onClick={() => (window.location.href = `/events/${event.slug}`)}>
+                <Button variant="outline" size="sm" onClick={() => router.push(`/events/${event.slug}`)}>
                   Menu bekijken
                 </Button>
-                <Button variant="outline" size="sm" onClick={() => (window.location.href = `/events/${event.slug}/edit`)}>
+                <Button variant="outline" size="sm" onClick={() => router.push(`/events/${event.slug}/edit`)}>
                   <Edit className="mr-2 h-4 w-4" />
                   Bewerken
                 </Button>
-                <Button variant="outline" size="sm" onClick={() => (window.location.href = `/events/${event.slug}/clone`)}>
+                <Button variant="outline" size="sm" onClick={() => router.push(`/events/${event.slug}/clone`)}>
                   <Copy className="mr-2 h-4 w-4" />
                   Kloon
                 </Button>
@@ -78,7 +81,7 @@ export function AdminEventsList() {
                 <Button
                   variant="secondary"
                   size="sm"
-                  onClick={() => (window.location.href = `/events/${event.slug}/categories`)}
+                  onClick={() => router.push(`/events/${event.slug}/categories`)}
                 >
                   Categorieen beheren
                 </Button>
