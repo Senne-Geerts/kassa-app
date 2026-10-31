@@ -1,27 +1,22 @@
 'use client';
 
 import { eventApi, orderApi, OrderLineRequest } from '@/lib/api';
+import type { MenuResponse, MenuProductItem } from '@/lib/api';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import { Badge } from '@/components/ui/Badge';
 import { Input } from '@/components/ui/Input';
 import { useEffect, useMemo, useState, use } from 'react';
-import { X, Plus, Minus, Trash2, Check } from 'lucide-react';
-
-interface Product {
-  id: string;
-  name: string;
-  price: number;
-  sortOrder: number;
-}
+import { Plus, Minus, Trash2, Check } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 interface CartItem extends OrderLineRequest {
-  product: Product;
+  product: MenuProductItem;
 }
 
 export default function NewOrderPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
-  const [menu, setMenu] = useState<any>(null);
+  const router = useRouter();
+  const [menu, setMenu] = useState<MenuResponse | null>(null);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [clientId, setClientId] = useState<string>('');
   const [selectedCategory, setSelectedCategory] = useState<string>('');
@@ -46,9 +41,9 @@ export default function NewOrderPage({ params }: { params: Promise<{ slug: strin
 
   const filteredProducts = useMemo(() => {
     if (!menu) return [];
-    const category = menu.categories.find((c: any) => c.id === selectedCategory);
+    const category = menu.categories.find((c) => c.id === selectedCategory);
     if (!category) return [];
-    return category.products.filter((p: any) =>
+    return category.products.filter((p) =>
       p.name.toLowerCase().includes(searchTerm.toLowerCase()),
     );
   }, [menu, selectedCategory, searchTerm]);
@@ -57,7 +52,7 @@ export default function NewOrderPage({ params }: { params: Promise<{ slug: strin
     return cart.reduce((sum, item) => sum + item.quantity * item.product.price, 0);
   }, [cart]);
 
-  const addToCart = (product: Product) => {
+  const addToCart = (product: MenuProductItem) => {
     setCart((prev) => {
       const existing = prev.find((item) => item.productId === product.id);
       if (existing) {
@@ -90,6 +85,7 @@ export default function NewOrderPage({ params }: { params: Promise<{ slug: strin
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!menu) return;
     setIsSubmitting(true);
     try {
       const lines: OrderLineRequest[] = cart.map((item) => ({
@@ -117,7 +113,7 @@ export default function NewOrderPage({ params }: { params: Promise<{ slug: strin
             <h2 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">Bestelling Afgerond!</h2>
             <p className="mt-2 text-zinc-500 dark:text-zinc-400">De bestelling is succesvol geregistreerd.</p>
             <div className="mt-6">
-              <Button onClick={() => (window.location.href = `/events/${slug}`)}>Terug naar Evenement</Button>
+              <Button onClick={() => router.push(`/events/${slug}`)}>Terug naar Evenement</Button>
             </div>
           </CardContent>
         </Card>
@@ -144,7 +140,7 @@ export default function NewOrderPage({ params }: { params: Promise<{ slug: strin
         <div className="lg:col-span-2 space-y-6">
           {/* Category filter */}
           <div className="flex gap-2 overflow-x-auto pb-2">
-            {menu.categories.map((category: any) => (
+            {menu.categories.map((category) => (
               <button
                 key={category.id}
                 onClick={() => setSelectedCategory(category.id)}
@@ -173,7 +169,7 @@ export default function NewOrderPage({ params }: { params: Promise<{ slug: strin
 
           {/* Product grid */}
           <div className="grid gap-4 sm:grid-cols-2">
-            {filteredProducts.map((product: Product) => (
+            {filteredProducts.map((product: MenuProductItem) => (
               <Button
                 key={product.id}
                 variant="outline"

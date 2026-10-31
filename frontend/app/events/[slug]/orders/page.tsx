@@ -1,16 +1,19 @@
 'use client';
 
 import { eventApi, orderApi } from '@/lib/api';
+import type { EventResponse, OrderResponse } from '@/lib/api';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { ArrowLeft, Clock, Loader2 } from 'lucide-react';
 import { useEffect, useState, use } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function OrderHistoryPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
-  const [menu, setMenu] = useState<any>(null);
-  const [orders, setOrders] = useState<any[]>([]);
+  const router = useRouter();
+  const [menu, setMenu] = useState<EventResponse | null>(null);
+  const [orders, setOrders] = useState<OrderResponse[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -55,7 +58,7 @@ export default function OrderHistoryPage({ params }: { params: Promise<{ slug: s
           <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">Bestelgeschiedenis</h1>
           <p className="text-zinc-500 dark:text-zinc-400">{menu.name}</p>
         </div>
-        <Button variant="outline" onClick={() => (window.location.href = `/events/${menu.slug}`)}>
+        <Button variant="outline" onClick={() => router.push(`/events/${menu.slug}`)}>
           <ArrowLeft className="mr-2 h-4 w-4" />
           Terug naar Menu
         </Button>
@@ -80,7 +83,7 @@ export default function OrderHistoryPage({ params }: { params: Promise<{ slug: s
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                {order.lines.map((line: any) => (
+                {order.lines.map((line) => (
                   <div key={line.productId} className="flex items-center justify-between text-sm border-b border-zinc-100 dark:border-zinc-800 pb-1 last:border-0">
                     <span className="text-zinc-700 dark:text-zinc-300">
                       {line.name} × {line.quantity}

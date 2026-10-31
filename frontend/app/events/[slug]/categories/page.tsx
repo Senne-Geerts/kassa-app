@@ -1,21 +1,19 @@
 'use client';
 
 import { categoryApi, eventApi } from '@/lib/api';
+import type { CategoryResponse, EventResponse } from '@/lib/api';
 import { Button } from '@/components/ui/Button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { ArrowLeft, Plus, Trash2, Edit } from 'lucide-react';
 import { useEffect, useState, use } from 'react';
-
-interface Category {
-  id: string;
-  name: string;
-}
+import { useRouter } from 'next/navigation';
 
 export default function CategoryListPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
-  const [categories, setCategories] = useState<Category[]>([]);
+  const router = useRouter();
+  const [categories, setCategories] = useState<CategoryResponse[]>([]);
   const [loading, setLoading] = useState(true);
-  const [event, setEvent] = useState<any>(null);
+  const [event, setEvent] = useState<EventResponse | null>(null);
 
   useEffect(() => {
     async function fetchData() {
@@ -24,7 +22,7 @@ export default function CategoryListPage({ params }: { params: Promise<{ slug: s
         setEvent(eventData);
 
         const catData = await categoryApi.getAll(eventData.id);
-        setCategories(Array.isArray(catData) ? catData : []);
+        setCategories(catData);
       } catch (error) {
         console.error('Mislukt om categorieen op te halen:', error);
         setCategories([]);
@@ -39,6 +37,7 @@ export default function CategoryListPage({ params }: { params: Promise<{ slug: s
     if (!confirm('Weet je zeker dat je deze categorie wilt verwijderen?')) return;
 
     try {
+      if (!event) return;
       await categoryApi.delete(event.id, categoryId);
       setCategories((prev) => prev.filter((c) => c.id !== categoryId));
     } catch (error) {
@@ -65,7 +64,7 @@ export default function CategoryListPage({ params }: { params: Promise<{ slug: s
           </div>
           <Button
             variant="outline"
-            onClick={() => (window.location.href = '/events')}
+            onClick={() => router.push('/events')}
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
             Terug naar Evenementen
@@ -74,7 +73,7 @@ export default function CategoryListPage({ params }: { params: Promise<{ slug: s
       </div>
 
       <div className="mb-6">
-        <Button onClick={() => (window.location.href = `/events/${slug}/categories/new`)}>
+        <Button onClick={() => router.push(`/events/${slug}/categories/new`)}>
           <Plus className="mr-2 h-4 w-4" />
           Nieuwe Categorie
         </Button>
@@ -91,7 +90,7 @@ export default function CategoryListPage({ params }: { params: Promise<{ slug: s
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => (window.location.href = `/events/${slug}/categories/${category.id}/edit`)}
+                  onClick={() => router.push(`/events/${slug}/categories/${category.id}/edit`)}
                 >
                   <Edit className="mr-2 h-4 w-4" />
                   Bewerken
@@ -112,7 +111,7 @@ export default function CategoryListPage({ params }: { params: Promise<{ slug: s
             <CardContent>
               <Button
                 variant="outline"
-                onClick={() => (window.location.href = `/events/${slug}/categories/${category.id}/products`)}
+                onClick={() => router.push(`/events/${slug}/categories/${category.id}/products`)}
               >
                 Producten beheren
               </Button>

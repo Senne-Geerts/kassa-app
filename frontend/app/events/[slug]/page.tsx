@@ -1,26 +1,21 @@
 'use client';
 
 import { eventApi, orderApi, OrderLineRequest } from '@/lib/api';
+import type { MenuResponse, MenuProductItem } from '@/lib/api';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import { Badge } from '@/components/ui/Badge';
-import { ArrowLeft, Check, Loader2, Plus, Minus, Trash2, X } from 'lucide-react';
+import { ArrowLeft, Check, Loader2, Plus, Minus, Trash2 } from 'lucide-react';
 import { useEffect, useMemo, useState, use } from 'react';
-
-interface Product {
-  id: string;
-  name: string;
-  price: number;
-  sortOrder: number;
-}
+import { useRouter } from 'next/navigation';
 
 interface CartItem extends OrderLineRequest {
-  product: Product;
+  product: MenuProductItem;
 }
 
 export default function EventMenuPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
-  const [menu, setMenu] = useState<any>(null);
+  const router = useRouter();
+  const [menu, setMenu] = useState<MenuResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [searchTerm, setSearchTerm] = useState<string>('');
@@ -45,7 +40,7 @@ export default function EventMenuPage({ params }: { params: Promise<{ slug: stri
     return cart.reduce((sum, item) => sum + item.quantity * item.product.price, 0);
   }, [cart]);
 
-  const addToCart = (product: Product) => {
+  const addToCart = (product: MenuProductItem) => {
     setCart((prev) => {
       const existing = prev.find((item) => item.productId === product.id);
       if (existing) {
@@ -79,6 +74,7 @@ export default function EventMenuPage({ params }: { params: Promise<{ slug: stri
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!menu) return;
     setIsSubmitting(true);
     try {
       const clientId = crypto.randomUUID();
@@ -140,7 +136,7 @@ export default function EventMenuPage({ params }: { params: Promise<{ slug: stri
         <div>
           <h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-50">{menu.name}</h1>
         </div>
-        <Button variant="outline" onClick={() => (window.location.href = '/')}>
+        <Button variant="outline" onClick={() => router.push('/')}>
           <ArrowLeft className="mr-2 h-4 w-4" />
           Terug naar Evenementen
         </Button>
@@ -160,9 +156,9 @@ export default function EventMenuPage({ params }: { params: Promise<{ slug: stri
           </div>
 
           {/* Products grouped by category */}
-          {menu.categories.map((category: any) => {
+          {menu.categories.map((category) => {
             const categoryProducts = searchTerm
-              ? category.products.filter((p: any) =>
+              ? category.products.filter((p) =>
                   p.name.toLowerCase().includes(searchTerm.toLowerCase()),
                 )
               : category.products;
@@ -178,7 +174,7 @@ export default function EventMenuPage({ params }: { params: Promise<{ slug: stri
                   {category.name}
                 </h2>
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  {categoryProducts.map((product: Product) => (
+                  {categoryProducts.map((product) => (
                     <Button
                       key={product.id}
                       variant="outline"

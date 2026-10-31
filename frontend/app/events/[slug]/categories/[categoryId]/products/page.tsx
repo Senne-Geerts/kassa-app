@@ -1,24 +1,20 @@
 'use client';
 
 import { categoryApi, eventApi, productApi } from '@/lib/api';
+import type { CategoryResponse, EventResponse, ProductResponse } from '@/lib/api';
 import { Button } from '@/components/ui/Button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
+import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { ArrowLeft, Plus, Trash2, Edit } from 'lucide-react';
 import { useEffect, useState, use } from 'react';
-
-interface Product {
-  id: string;
-  name: string;
-  price: number;
-  sortOrder: number;
-}
+import { useRouter } from 'next/navigation';
 
 export default function ProductListPage({ params }: { params: Promise<{ slug: string; categoryId: string }> }) {
   const { slug, categoryId } = use(params);
-  const [products, setProducts] = useState<Product[]>([]);
+  const router = useRouter();
+  const [products, setProducts] = useState<ProductResponse[]>([]);
   const [loading, setLoading] = useState(true);
-  const [event, setEvent] = useState<any>(null);
-  const [category, setCategory] = useState<any>(null);
+  const [event, setEvent] = useState<EventResponse | null>(null);
+  const [category, setCategory] = useState<CategoryResponse | null>(null);
 
   useEffect(() => {
     async function fetchData() {
@@ -27,11 +23,11 @@ export default function ProductListPage({ params }: { params: Promise<{ slug: st
         setEvent(eventData);
 
         const catData = await categoryApi.getAll(eventData.id);
-        const foundCategory = catData.find((c: any) => c.id === categoryId);
-        setCategory(foundCategory);
+        const foundCategory = catData.find((c) => c.id === categoryId);
+        setCategory(foundCategory ?? null);
 
         const prodData = await productApi.getAll(eventData.id, categoryId);
-        setProducts(Array.isArray(prodData) ? prodData : []);
+        setProducts(prodData);
       } catch (error) {
         console.error('Mislukt om producten op te halen:', error);
         setProducts([]);
@@ -46,6 +42,7 @@ export default function ProductListPage({ params }: { params: Promise<{ slug: st
     if (!confirm('Weet je zeker dat je dit product wilt verwijderen?')) return;
 
     try {
+      if (!event) return;
       await productApi.delete(event.id, categoryId, productId);
       setProducts((prev) => prev.filter((p) => p.id !== productId));
     } catch (error) {
@@ -66,11 +63,11 @@ export default function ProductListPage({ params }: { params: Promise<{ slug: st
     <div className="container mx-auto max-w-4xl p-6">
       <div className="mb-6">
         <div className="flex items-center justify-between">
-          <Button variant="outline" onClick={() => (window.location.href = `/events/${slug}/categories`)}>
+          <Button variant="outline" onClick={() => router.push(`/events/${slug}/categories`)}>
             <ArrowLeft className="mr-2 h-4 w-4" />
             Terug naar Categorieen
           </Button>
-          <Button onClick={() => (window.location.href = `/events/${slug}/categories/${categoryId}/products/new`)}>
+          <Button onClick={() => router.push(`/events/${slug}/categories/${categoryId}/products/new`)}>
             <Plus className="mr-2 h-4 w-4" />
             Nieuw Product
           </Button>
@@ -80,7 +77,6 @@ export default function ProductListPage({ params }: { params: Promise<{ slug: st
       <Card className="mb-6">
         <CardHeader>
           <CardTitle>Categorie: {category?.name}</CardTitle>
-          <CardDescription>{category?.sortOrder > 0 ? `Sort Volgorde: ${category.sortOrder}` : ''}</CardDescription>
         </CardHeader>
       </Card>
 
@@ -91,14 +87,14 @@ export default function ProductListPage({ params }: { params: Promise<{ slug: st
               <div>
                 <CardTitle className="text-xl">{product.name}</CardTitle>
                 <CardDescription>
-                  €{product.price.toFixed(2)} | Sort Volgorde: {product.sortOrder}
+                  €{product.price.toFixed(2)}
                 </CardDescription>
               </div>
               <div className="flex gap-2">
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => (window.location.href = `/events/${slug}/categories/${categoryId}/products/${product.id}/edit`)}
+                  onClick={() => router.push(`/events/${slug}/categories/${categoryId}/products/${product.id}/edit`)}
                 >
                   <Edit className="mr-2 h-4 w-4" />
                   Bewerken

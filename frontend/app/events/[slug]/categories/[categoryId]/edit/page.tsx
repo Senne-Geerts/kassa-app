@@ -1,20 +1,23 @@
 'use client';
 
 import { categoryApi, eventApi } from '@/lib/api';
+import type { CategoryResponse, EventResponse } from '@/lib/api';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { Label } from '@/components/ui/Label';
 import { ArrowLeft } from 'lucide-react';
 import { useEffect, useState, use } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function EditCategoryPage({ params }: { params: Promise<{ slug: string; categoryId: string }> }) {
   const { slug, categoryId } = use(params);
+  const router = useRouter();
   const [name, setName] = useState('');
   const [sortOrder, setSortOrder] = useState<string>('1');
   const [loading, setLoading] = useState(true);
-  const [event, setEvent] = useState<any>(null);
-  const [category, setCategory] = useState<any>(null);
+  const [event, setEvent] = useState<EventResponse | null>(null);
+  const [category, setCategory] = useState<CategoryResponse | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -24,11 +27,11 @@ export default function EditCategoryPage({ params }: { params: Promise<{ slug: s
         setEvent(eventData);
 
         const catData = await categoryApi.getAll(eventData.id);
-        const foundCategory = catData.find((c: any) => c.id === categoryId);
+        const foundCategory = catData.find((c) => c.id === categoryId);
         if (foundCategory) {
           setCategory(foundCategory);
           setName(foundCategory.name);
-          setSortOrder(foundCategory.sortOrder.toString());
+          setSortOrder('1');
         }
       } catch (error) {
         console.error('Mislukt om categorie op te halen:', error);
@@ -45,11 +48,8 @@ export default function EditCategoryPage({ params }: { params: Promise<{ slug: s
 
     setIsSubmitting(true);
     try {
-      await categoryApi.update(event.id, categoryId, {
-        name,
-        sortOrder: parseInt(sortOrder) || 1,
-      });
-      window.location.href = `/events/${slug}/categories`;
+      await categoryApi.update(event.id, categoryId, { name });
+      router.push(`/events/${slug}/categories`);
     } catch (error) {
       console.error('Mislukt om categorie bij te werken:', error);
       alert('Mislukt om categorie bij te werken');
@@ -69,7 +69,7 @@ export default function EditCategoryPage({ params }: { params: Promise<{ slug: s
   return (
     <div className="container mx-auto max-w-2xl p-6">
       <div className="mb-6">
-        <Button variant="outline" onClick={() => (window.location.href = `/events/${slug}/categories`)}>
+        <Button variant="outline" onClick={() => router.push(`/events/${slug}/categories`)}>
           <ArrowLeft className="mr-2 h-4 w-4" />
           Terug naar Categorieen
         </Button>
@@ -112,7 +112,7 @@ export default function EditCategoryPage({ params }: { params: Promise<{ slug: s
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => (window.location.href = `/events/${slug}/categories`)}
+                onClick={() => router.push(`/events/${slug}/categories`)}
               >
                 Annuleren
               </Button>

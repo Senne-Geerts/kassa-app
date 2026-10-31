@@ -1,16 +1,16 @@
 'use client';
 
 import { eventApi } from '@/lib/api';
+import type { EventResponse } from '@/lib/api';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
-import { Badge } from '@/components/ui/Badge';
 import { ArrowRight, Clock, Calendar, Loader2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 export function EventsList() {
   const router = useRouter();
-  const [events, setEvents] = useState<any[]>([]);
+  const [events, setEvents] = useState<EventResponse[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
