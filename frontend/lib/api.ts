@@ -1,4 +1,8 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
+// Browser requests use localhost:8080 (Docker-mapped port)
+// Server-side requests (SSR) use Docker network hostname
+const API_BASE = typeof window !== 'undefined'
+  ? 'http://localhost:8080'
+  : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080');
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const url = `${API_BASE}${path}`;
@@ -113,34 +117,34 @@ export interface CreateOrderRequest {
 
 // Event API
 export const eventApi = {
-  getAll: (activeOnly: boolean = false) => request<EventResponse[]>(`/events?activeOnly=${activeOnly}`),
-  getById: (id: string) => request<EventResponse>(`/events/${id}`),
-  getBySlug: (slug: string) => request<EventResponse>(`/events/slug/${slug}`),
-  getMenuBySlug: (slug: string) => request<MenuResponse>(`/events/slug/${slug}/menu`),
-  create: (data: EventRequest) => request<EventResponse>('/events', { method: 'POST', body: JSON.stringify(data) }),
-  update: (id: string, data: EventRequest) => request<EventResponse>(`/events/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
-  delete: (id: string) => request<void>(`/events/${id}`, { method: 'DELETE' }),
-  clone: (id: string, data: EventRequest) => request<EventResponse>(`/events/${id}/clone`, { method: 'POST', body: JSON.stringify(data) }),
+  getAll: (activeOnly: boolean = false) => request<EventResponse[]>(`/api/events?activeOnly=${activeOnly}`),
+  getById: (id: string) => request<EventResponse>(`/api/events/${id}`),
+  getBySlug: (slug: string) => request<EventResponse>(`/api/events/slug/${slug}`),
+  getMenuBySlug: (slug: string) => request<MenuResponse>(`/api/events/slug/${slug}/menu`),
+  create: (data: EventRequest) => request<EventResponse>('/api/events', { method: 'POST', body: JSON.stringify(data) }),
+  update: (id: string, data: EventRequest) => request<EventResponse>(`/api/events/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  delete: (id: string) => request<void>(`/api/events/${id}`, { method: 'DELETE' }),
+  clone: (id: string, data: EventRequest) => request<EventResponse>(`/api/events/${id}/clone`, { method: 'POST', body: JSON.stringify(data) }),
 };
 
 // Category API
 export const categoryApi = {
-  getAll: (eventId: string) => request<CategoryResponse[]>(`/events/${eventId}/categories`),
-  create: (eventId: string, data: CategoryRequest) => request<CategoryResponse>(`/events/${eventId}/categories`, { method: 'POST', body: JSON.stringify(data) }),
-  update: (eventId: string, categoryId: string, data: CategoryRequest) => request<CategoryResponse>(`/events/${eventId}/categories/${categoryId}`, { method: 'PUT', body: JSON.stringify(data) }),
-  delete: (eventId: string, categoryId: string) => request<void>(`/events/${eventId}/categories/${categoryId}`, { method: 'DELETE' }),
+  getAll: (eventId: string) => request<CategoryResponse[]>(`/api/events/${eventId}/categories`),
+  create: (eventId: string, data: CategoryRequest) => request<CategoryResponse>(`/api/events/${eventId}/categories`, { method: 'POST', body: JSON.stringify(data) }),
+  update: (eventId: string, categoryId: string, data: CategoryRequest) => request<CategoryResponse>(`/api/events/${eventId}/categories/${categoryId}`, { method: 'PUT', body: JSON.stringify(data) }),
+  delete: (eventId: string, categoryId: string) => request<void>(`/api/events/${eventId}/categories/${categoryId}`, { method: 'DELETE' }),
 };
 
 // Product API
 export const productApi = {
-  getAll: (eventId: string, categoryId: string) => request<ProductResponse[]>(`/events/${eventId}/categories/${categoryId}/products`),
-  create: (eventId: string, categoryId: string, data: ProductRequest) => request<ProductResponse>(`/events/${eventId}/categories/${categoryId}/products`, { method: 'POST', body: JSON.stringify(data) }),
-  update: (eventId: string, categoryId: string, productId: string, data: ProductRequest) => request<ProductResponse>(`/events/${eventId}/categories/${categoryId}/products/${productId}`, { method: 'PUT', body: JSON.stringify(data) }),
-  delete: (eventId: string, categoryId: string, productId: string) => request<void>(`/events/${eventId}/categories/${categoryId}/products/${productId}`, { method: 'DELETE' }),
+  getAll: (eventId: string, categoryId: string) => request<ProductResponse[]>(`/api/events/${eventId}/categories/${categoryId}/products`),
+  create: (eventId: string, categoryId: string, data: ProductRequest) => request<ProductResponse>(`/api/events/${eventId}/categories/${categoryId}/products`, { method: 'POST', body: JSON.stringify(data) }),
+  update: (eventId: string, categoryId: string, productId: string, data: ProductRequest) => request<ProductResponse>(`/api/events/${eventId}/categories/${categoryId}/products/${productId}`, { method: 'PUT', body: JSON.stringify(data) }),
+  delete: (eventId: string, categoryId: string, productId: string) => request<void>(`/api/events/${eventId}/categories/${categoryId}/products/${productId}`, { method: 'DELETE' }),
 };
 
 // Order API
 export const orderApi = {
-  create: (eventId: string, data: CreateOrderRequest) => request<OrderResponse>(`/events/${eventId}/orders`, { method: 'POST', body: JSON.stringify(data) }),
-  getAll: (eventId: string) => request<OrderResponse[]>(`/events/${eventId}/orders`),
+  create: (eventId: string, data: CreateOrderRequest) => request<OrderResponse>(`/api/events/${eventId}/orders`, { method: 'POST', body: JSON.stringify(data) }),
+  getAll: (eventId: string) => request<OrderResponse[]>(`/api/events/${eventId}/orders`),
 };
