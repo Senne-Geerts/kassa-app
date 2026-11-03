@@ -1,8 +1,8 @@
-// Browser requests use localhost:8080 (Docker-mapped port)
-// Server-side requests (SSR) use Docker network hostname
+// Browser requests use NEXT_PUBLIC_API_URL (production) or localhost (dev)
+// Server-side requests (SSR) use Docker network hostname or NEXT_PUBLIC_API_URL
 const API_BASE = typeof window !== 'undefined'
-  ? 'http://localhost:8080'
-  : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080');
+  ? (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080')
+  : (process.env.NEXT_PUBLIC_API_URL || 'http://api:8080');
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const url = `${API_BASE}${path}`;

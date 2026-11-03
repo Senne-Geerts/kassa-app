@@ -1,0 +1,54 @@
+name: Deploy to Home Server
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Run CI Tests
+    uses: ./.github/workflows/ci.yml
+
+  deploy:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.ref == 'refs/heads/master'
+
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          script: |
+            set -e
+
+            cd /opt/kassa-app
+
+            echo "Pulling latest code from GitHub..."
+            git fetch origin
+            git reset --hard origin/master
+
+            echo "Setting production environment..."
+            export NEXT_PUBLIC_API_URL=https://kassa.sennegeerts.com
+
+            echo "Building and starting containers..."
+            docker compose down
+            docker compose up --build -d
+
+            echo "Waiting for services to be healthy..."
+            sleep 10
+
+            echo "Checking API health..."
+            curl -f http://localhost:8080/api/events || exit 1
+
+            echo "Deployment complete!"
+            docker compose ps

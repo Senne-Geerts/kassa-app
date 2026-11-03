@@ -22,7 +22,8 @@ public class KassaAppApiApplication {
 		config.setAllowCredentials(true);
 		config.setAllowedOrigins(List.of(
 			"http://localhost:3000",
-			"http://frontend:3000"
+			"http://frontend:3000",
+			"https://kassa.sennegeerts.com"
 		));
 		config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
 		config.setAllowedHeaders(List.of("*"));
