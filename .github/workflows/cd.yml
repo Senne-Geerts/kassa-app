@@ -33,16 +33,19 @@ jobs:
 
             cd /opt/kassa-app
 
-            echo "Pulling latest code from GitHub..."
-            git fetch origin
-            git reset --hard origin/master
+            echo "Setting image tag to deploy..."
+            export IMAGE_TAG=${{ github.sha }}
 
-            echo "Setting production environment..."
-            export NEXT_PUBLIC_API_URL=https://kassa.sennegeerts.com
+            echo "Pulling images from GitHub Container Registry..."
+            docker compose pull || {
+              echo "Failed to pull SHA-tagged images, falling back to latest..."
+              export IMAGE_TAG=latest
+              docker compose pull
+            }
 
-            echo "Building and starting containers..."
+            echo "Starting containers..."
             docker compose down
-            docker compose up --build -d
+            docker compose up -d
 
             echo "Waiting for services to be healthy..."
             sleep 10
@@ -52,3 +55,5 @@ jobs:
 
             echo "Deployment complete!"
             docker compose ps
+
+            echo "Deployed image tag: ${IMAGE_TAG}"
