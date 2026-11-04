@@ -4,7 +4,7 @@ on:
   pull_request:
   push:
     branches:
-      - main
+      - master
   workflow_dispatch:
 
 permissions:
@@ -116,7 +116,7 @@ jobs:
     name: Build and publish Docker images
     runs-on: ubuntu-latest
     needs: [api, frontend]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     permissions:
       contents: read
       packages: write
