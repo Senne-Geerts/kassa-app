@@ -1,63 +1,58 @@
 name: CD
 
 on:
-  push:
+  workflow_run:
+    workflows:
+      - CI
+    types:
+      - completed
     branches:
-      - master
-  workflow_dispatch:
+      - main
 
 permissions:
   contents: read
-  packages: write
+
+concurrency:
+  group: production
+  cancel-in-progress: false
 
 jobs:
-  test:
-    name: Run CI Tests
-    uses: ./.github/workflows/ci.yml
-    permissions:
-      contents: read
-      packages: write
-
   deploy:
-    name: Deploy to Production
+    name: Deploy to production
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_branch == 'main'
     runs-on: ubuntu-latest
-    needs: test
-    if: github.ref == 'refs/heads/master'
-
+    environment: production
     steps:
-      - name: Deploy via SSH
+      - name: Deploy tested images via SSH
         uses: appleboy/ssh-action@v1.0.3
+        env:
+          IMAGE_TAG: ${{ github.event.workflow_run.head_sha }}
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SSH_PORT || 22 }}
+          envs: IMAGE_TAG
           script: |
-            set -e
+            set -eu
 
             cd /opt/kassa-app
+            export IMAGE_TAG
+            docker compose pull
+            docker compose up -d --remove-orphans
 
-            echo "Setting image tag to deploy..."
-            export IMAGE_TAG=${{ github.sha }}
+            for attempt in $(seq 1 30); do
+              if curl --fail --silent http://127.0.0.1:8080/api/events >/dev/null; then
+                echo "Deployment ${IMAGE_TAG} is healthy."
+                docker compose ps
+                exit 0
+              fi
+              sleep 2
+            done
 
-            echo "Pulling images from GitHub Container Registry..."
-            docker compose pull || {
-              echo "Failed to pull SHA-tagged images, falling back to latest..."
-              export IMAGE_TAG=latest
-              docker compose pull
-            }
-
-            echo "Starting containers..."
-            docker compose down
-            docker compose up -d
-
-            echo "Waiting for services to be healthy..."
-            sleep 10
-
-            echo "Checking API health..."
-            curl -f http://localhost:8080/api/events || exit 1
-
-            echo "Deployment complete!"
+            echo "API health check failed after deployment ${IMAGE_TAG}." >&2
             docker compose ps
-
-            echo "Deployed image tag: ${IMAGE_TAG}"
+            exit 1
