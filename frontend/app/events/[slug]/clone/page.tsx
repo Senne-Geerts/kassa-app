@@ -32,7 +32,7 @@ export default async function CloneEventPage({ params }: { params: Promise<{ slu
 
   return (
     <div className="container mx-auto max-w-2xl p-6">
-      <EventForm defaultValue={defaultValue} onSubmit={handleSubmit} submitLabel="Kloon aanmaken" cancelLink="/events" />
+      <EventForm defaultValue={defaultValue} onSubmit={handleSubmit} autoGenerateSlug submitLabel="Kloon aanmaken" cancelLink="/events" />
     </div>
   );
 }
