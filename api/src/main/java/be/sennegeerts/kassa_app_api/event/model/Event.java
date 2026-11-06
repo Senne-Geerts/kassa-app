@@ -41,7 +41,6 @@ public class Event {
     private Instant createdAt = Instant.now();
 
     @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
-    @OrderBy("sortOrder ASC")
     private List<Category> categories = new ArrayList<>();
 
     @OneToMany(mappedBy = "event")
