@@ -44,6 +44,25 @@ export interface EventRequest {
   active?: boolean;
 }
 
+export interface EventSummaryResponse {
+  categories: CategorySummary[];
+}
+
+export interface CategorySummary {
+  categoryId: string;
+  categoryName: string;
+  totalQuantitySold: number;
+  totalRevenue: number;
+  products: ProductSummary[];
+}
+
+export interface ProductSummary {
+  productId: string;
+  nameSnapshot: string;
+  quantitySold: number;
+  revenue: number;
+}
+
 // Menu types
 export interface MenuResponse {
   id: string;
@@ -125,6 +144,10 @@ export const eventApi = {
   update: (id: string, data: EventRequest) => request<EventResponse>(`/api/events/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   delete: (id: string) => request<void>(`/api/events/${id}`, { method: 'DELETE' }),
   clone: (id: string, data: EventRequest) => request<EventResponse>(`/api/events/${id}/clone`, { method: 'POST', body: JSON.stringify(data) }),
+};
+
+export const summaryApi = {
+  get: (eventId: string) => request<EventSummaryResponse>(`/api/events/${eventId}/summary`),
 };
 
 // Category API
