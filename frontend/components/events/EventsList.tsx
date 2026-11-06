@@ -4,7 +4,7 @@ import { eventApi } from '@/lib/api';
 import type { EventResponse } from '@/lib/api';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
-import { ArrowRight, Clock, Calendar, Loader2 } from 'lucide-react';
+import { ArrowRight, Clock, Calendar, Loader2, Archive } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
@@ -42,9 +42,15 @@ export function EventsList() {
           <h1 className="text-4xl font-bold text-zinc-900 dark:text-zinc-50">Kies een evenement</h1>
           <p className="mt-2 text-lg text-zinc-500 dark:text-zinc-400">Selecteer een evenement om het menu te bekijken</p>
         </div>
-        <Button onClick={() => router.push('/events/new')}>
-          Nieuw evenement
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" onClick={() => router.push('/events/archive')}>
+            <Archive className="mr-2 h-4 w-4" />
+            Afgeronde evenementen
+          </Button>
+          <Button onClick={() => router.push('/events/new')}>
+            Nieuw evenement
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">

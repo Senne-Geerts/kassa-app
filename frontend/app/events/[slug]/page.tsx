@@ -1,10 +1,10 @@
 'use client';
 
-import { eventApi, orderApi, OrderLineRequest } from '@/lib/api';
-import type { MenuResponse, MenuProductItem } from '@/lib/api';
+import { eventApi, orderApi } from '@/lib/api';
+import type { EventResponse, MenuResponse, MenuProductItem, OrderLineRequest } from '@/lib/api';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import { ArrowLeft, Check, Loader2, Plus, Minus, Trash2 } from 'lucide-react';
+import { ArrowLeft, Check, Loader2, Plus, Minus, Trash2, ClipboardList } from 'lucide-react';
 import { useEffect, useMemo, useState, use } from 'react';
 import { useRouter } from 'next/navigation';
 
@@ -16,17 +16,24 @@ export default function EventMenuPage({ params }: { params: Promise<{ slug: stri
   const { slug } = use(params);
   const router = useRouter();
   const [menu, setMenu] = useState<MenuResponse | null>(null);
+  const [event, setEvent] = useState<EventResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
+  const [closeError, setCloseError] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchMenu() {
       try {
-        const data = await eventApi.getMenuBySlug(slug);
-        setMenu(data);
+        const [menuData, eventData] = await Promise.all([
+          eventApi.getMenuBySlug(slug),
+          eventApi.getBySlug(slug),
+        ]);
+        setMenu(menuData);
+        setEvent(eventData);
       } catch (error) {
         console.error('Mislukt om menu op te halen:', error);
       } finally {
@@ -72,6 +79,30 @@ export default function EventMenuPage({ params }: { params: Promise<{ slug: stri
     setIsSuccess(false);
   };
 
+  const closeEvent = async () => {
+    if (!event || !window.confirm(
+      `Evenement "${event.name}" afronden? Er kunnen daarna geen nieuwe bestellingen worden geplaatst. Je kunt de samenvatting wel blijven bekijken.`,
+    )) {
+      return;
+    }
+
+    setIsClosing(true);
+    setCloseError(null);
+    try {
+      await eventApi.update(event.id, {
+        name: event.name,
+        slug: event.slug,
+        startsAt: event.startsAt,
+        active: false,
+      });
+      router.push(`/events/${event.slug}/summary`);
+    } catch (error) {
+      console.error('Mislukt om evenement af te ronden:', error);
+      setCloseError(error instanceof Error ? error.message : 'Evenement afronden is mislukt.');
+      setIsClosing(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!menu) return;
@@ -111,6 +142,25 @@ export default function EventMenuPage({ params }: { params: Promise<{ slug: stri
     );
   }
 
+  if (event && !event.active) {
+    return (
+      <div className="container mx-auto flex min-h-screen max-w-2xl items-center justify-center p-6">
+        <Card className="w-full">
+          <CardContent className="pt-8 text-center">
+            <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">Dit evenement is afgerond</h1>
+            <p className="mt-2 text-zinc-500 dark:text-zinc-400">
+              Er kunnen geen nieuwe bestellingen meer worden geplaatst.
+            </p>
+            <Button className="mt-6" onClick={() => router.push(`/events/${event.slug}/summary`)}>
+              <ClipboardList className="mr-2 h-4 w-4" />
+              Bekijk samenvatting
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   if (isSuccess) {
     return (
       <div className="container mx-auto flex min-h-screen items-center justify-center p-6">
@@ -132,15 +182,28 @@ export default function EventMenuPage({ params }: { params: Promise<{ slug: stri
 
   return (
     <div className="container mx-auto max-w-4xl min-h-screen p-6">
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-50">{menu.name}</h1>
         </div>
-        <Button variant="outline" onClick={() => router.push('/')}>
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Terug naar Evenementen
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" onClick={() => router.push('/')}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Terug naar Evenementen
+          </Button>
+          {event?.active && (
+            <Button variant="secondary" onClick={closeEvent} disabled={isClosing}>
+              <ClipboardList className="mr-2 h-4 w-4" />
+              {isClosing ? 'Afronden...' : 'Evenement afronden'}
+            </Button>
+          )}
+        </div>
       </div>
+      {closeError && (
+        <p role="alert" className="mb-6 rounded-md border border-red-300 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-300">
+          Evenement afronden is mislukt: {closeError}
+        </p>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2 space-y-8">
