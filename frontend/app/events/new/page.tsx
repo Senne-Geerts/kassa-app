@@ -11,7 +11,7 @@ export default function NewEventPage() {
 
   return (
     <div className="container mx-auto max-w-2xl p-6">
-      <EventForm onSubmit={handleSubmit} submitLabel="Evenement aanmaken" cancelLink="/events" />
+      <EventForm onSubmit={handleSubmit} autoGenerateSlug submitLabel="Evenement aanmaken" cancelLink="/events" />
     </div>
   );
 }

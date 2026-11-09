@@ -5,11 +5,23 @@ import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { FormField } from '@/components/ui/FormField';
 import { Input } from '@/components/ui/Input';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+
+function slugify(value: string) {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+}
 
 export interface EventFormProps {
   defaultValue?: EventRequest;
   onSubmit: (data: EventRequest) => void;
+  autoGenerateSlug?: boolean;
   submitLabel?: string;
   submitLoading?: boolean;
   cancelLink?: string;
@@ -18,11 +30,18 @@ export interface EventFormProps {
 export const EventForm = ({
   defaultValue,
   onSubmit,
+  autoGenerateSlug = false,
   submitLabel = 'Evenement opslaan',
   submitLoading,
   cancelLink,
 }: EventFormProps) => {
   const router = useRouter();
+  const [name, setName] = useState(defaultValue?.name ?? '');
+  const [slug, setSlug] = useState(() =>
+    autoGenerateSlug ? slugify(defaultValue?.name ?? '') : defaultValue?.slug ?? '',
+  );
+  const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
+
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const formData = new FormData(e.target as HTMLFormElement);
@@ -46,8 +65,15 @@ export const EventForm = ({
           <FormField label="Evenement Naam" description="De naam van je evenement" required>
             <Input
               name="name"
-              defaultValue={defaultValue?.name}
-              placeholder="Bijv., Zomer Festival 2025"
+              value={name}
+              onChange={(e) => {
+                const nextName = e.target.value;
+                setName(nextName);
+                if (autoGenerateSlug && !slugManuallyEdited) {
+                  setSlug(slugify(nextName));
+                }
+              }}
+              placeholder="Bijv., Pasta Di Skippy 2026"
               required
             />
           </FormField>
@@ -55,8 +81,12 @@ export const EventForm = ({
           <FormField label="Slug" description="URL-vriendelijke identifier (kleine letters, cijfers, streepjes)" required>
             <Input
               name="slug"
-              defaultValue={defaultValue?.slug}
-              placeholder="Bijv., zomer-festival-2025"
+              value={slug}
+              onChange={(e) => {
+                setSlug(e.target.value);
+                setSlugManuallyEdited(true);
+              }}
+              placeholder="Bijv., pasta-2026"
               required
             />
           </FormField>
